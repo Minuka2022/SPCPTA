@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPCPTA - WELCOME</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="res/img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="res/img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="res/img/favicon-16x16.png">
+    <link rel="manifest" href="res/img/site.webmanifest">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body, html {
+            height: 100%;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.96);
+            background-image: url('https://www.stpeterscollege.lk/wp-content/uploads/2021/03/SPC-10-scaled.jpg');
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: lighten;
+            position: relative;
+            overflow: hidden;
+        }
+        .container {
+            z-index: 2;
+            text-align: center;
+            color: darkblue;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .sample-name {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: darkblue;
+            font-size: 20px;
+            z-index: 2;
+        }
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            z-index: 2;
+        }
+        #countdown {
+            font-size: 80px;
+            text-align: center;
+            margin-bottom: 20px;
+            z-index: 2;
+            display: inline-block;
+            width: 300px;
+        }
+        .greeting {
+            font-size: 60px;
+            color: darkblue;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+            display: none;
+            z-index: 2;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        .greeting.show {
+            display: block;
+            animation: fadeIn 2s forwards;
+        }
+        @media (max-width: 768px) {
+            #countdown {
+                font-size: 50px;
+                width: 200px;
+            }
+            .greeting {
+                font-size: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="./assets/img/NEW_WEB_LOGO.png" alt="Logo" class="logo">
+        <div id="countdown">00:00:00</div>
+        <div id="greeting" class="greeting" style="display:none; opacity: 0;">Welcome to SPCPTA.lk</div>
+        <div class="sample-name">St. Peter's College Parent Teacher Association</div>
+    </div>
+    <script>
+        let lastModified = null; // To store the last modified timestamp
+
+        // Function to fetch the countdown end time from timer.json
+        function fetchCountdownEndTime() {
+            return fetch('timer.json?_=' + new Date().getTime(), { cache: "no-store" })
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.end_time) {
+                        return data.end_time * 1000; // Return time in milliseconds
+                    } else {
+                        console.error('Invalid data in timer.json');
+                        return null;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching timer.json:', error);
+                    return null;
+                });
+        }
+
+        // Function to get the last modified timestamp of timer.json
+        function fetchLastModified() {
+            return fetch('timer.json?_=' + new Date().getTime(), { method: 'HEAD' })
+                .then(response => {
+                    const lastModifiedHeader = response.headers.get('Last-Modified');
+                    return lastModifiedHeader ? new Date(lastModifiedHeader).getTime() : null;
+                })
+                .catch(error => {
+                    console.error('Error fetching last modified date:', error);
+                    return null;
+                });
+        }
+
+        // Function to start the countdown
+        function startCountdown() {
+            fetchCountdownEndTime().then(countdownEndTime => {
+                if (!countdownEndTime) return;
+
+                const countdownFunction = setInterval(function() {
+                    const now = new Date().getTime();
+                    const distance = countdownEndTime - now;
+
+                    // Calculate hours, minutes, and seconds
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    // Add leading zeros to hours, minutes, and seconds
+                    const formattedHours = hours < 10 ? "0" + hours : hours;
+                    const formattedMinutes = minutes < 10 ? "0" + minutes : minutes;
+                    const formattedSeconds = seconds < 10 ? "0" + seconds : seconds;
+
+                    // Display the result in the format hh:mm:ss
+                    document.getElementById("countdown").innerHTML = `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+
+                    // If the countdown is finished
+                    if (distance < 0) {
+                        clearInterval(countdownFunction);
+                        document.getElementById("countdown").innerHTML = "00:00:00";
+                        document.getElementById("countdown").style.display = "none";
+                        const greetingText = document.getElementById("greeting");
+                        greetingText.style.display = "block";
+                        setTimeout(() => {
+                            greetingText.style.opacity = "1"; // Fade in
+                        }, 100);
+
+                        // Show the welcome text for 4 seconds before executing rename.php
+                        setTimeout(() => {
+                            greetingText.style.opacity = "0"; // Fade out
+                            setTimeout(() => {
+                                greetingText.style.display = "none"; // Hide the text
+
+                                // Fetch and execute rename.php
+                                fetch('rename.php')
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            // Redirect to the new homepage
+                                            window.location.href = "index.php"; // Redirect to the new homepage
+                                        } else {
+                                            console.error('Error renaming files:', data.message);
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error executing rename.php:', error);
+                                    });
+                            }, 2000); // Delay before hiding the text (2 seconds for fade out)
+                        }, 4000); // Show welcome text for 4 seconds
+                    }
+                }, 1000);
+
+                // Periodically check if the timer.json has been updated
+                setInterval(() => {
+                    fetchLastModified().then(newLastModified => {
+                        if (lastModified && newLastModified && newLastModified > lastModified) {
+                            location.reload(); // Refresh the page if updated
+                        }
+                        lastModified = newLastModified;
+                    });
+                }, 10000); // Check every 10 seconds
+            });
+        }
+
+        // Start the countdown and initial last modified check when the page loads
+        fetchLastModified().then(timestamp => lastModified = timestamp);
+        startCountdown();
+    </script>
+</body>
+</html>
