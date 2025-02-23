@@ -1,9 +1,9 @@
 <?php
 
 $serverName = "localhost";
-$DBusername = "spcptalk_root";
-$DBpassword = "#SPCPTALK#2024";
-$DBname = "spcptalk_ecommerce";
+$DBusername = "root";
+$DBpassword = "";
+$DBname = "spcptadb";
 
 $conn = new mysqli($serverName, $DBusername, $DBpassword, $DBname);
 if ($conn->connect_error) {
